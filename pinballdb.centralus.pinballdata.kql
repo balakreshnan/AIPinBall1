@@ -1,0 +1,41 @@
+﻿.create table pinballlanding (data:dynamic)
+
+.create table pinballlanding ingestion json mapping 'pinballlandingMapping' '[{"column":"data","path":"$","datatype":"dynamic"}]'
+
+.alter database pinballdata policy ingestionbatching @'{"MaximumBatchingTimeSpan":"00:00:30", "MaximumNumberOfItems": 500, "MaximumRawDataSizeMB": 1024}'
+
+.show table pinballlanding policy  ingestionbatching
+
+pinballlanding
+| mv-expand r = data.records
+| project  rectime = todatetime(r.['time']), resourceId = tostring(r.resourceId), 
+operationName = tostring(r.operationName),  operationVersion = tostring(r.operationVersion), category= tostring(r.category), 
+tenantId = tostring(r.tenantId), resultType = toint(r.resultType), resultSignature = tostring(r.resultSignature), durationMs = todouble(r.durationMs), 
+callerIpAddress = tostring(r.callerIpAddress), correlationId = tostring(r.correlationId), 
+identity = tostring(r.identity), Level = toint(r.Level), location = tostring(r.location),
+properties = todynamic(r.properties)
+
+.create-or-alter function pinballparsing(){
+    pinballlanding
+| mv-expand r = data.records
+| project  rectime = todatetime(r.['time']), resourceId = tostring(r.resourceId), 
+operationName = tostring(r.operationName),  operationVersion = tostring(r.operationVersion), category= tostring(r.category), 
+tenantId = tostring(r.tenantId), resultType = toint(r.resultType), resultSignature = tostring(r.resultSignature), durationMs = todouble(r.durationMs), 
+callerIpAddress = tostring(r.callerIpAddress), correlationId = tostring(r.correlationId), 
+identity = tostring(r.identity), Level = toint(r.Level), location = tostring(r.location),
+properties = todynamic(r.properties)
+}
+
+.set pinballdata1 <|
+    pinballparsing()
+    | limit 0
+
+//  Create an update policy to transfer landing to landingTransformed
+.alter table pinballdata1 policy update
+@'[{"IsEnabled": true, "Source": "iamlogssignin", "Query": "iamlogssigninparsing", "IsTransactional": true, "PropagateIngestionProperties": false}]'
+
+aadsignins
+| limit 10
+
+//  Alter retention policy as this is also only for end-user queries
+.alter table iamlogssignin policy retention "{'SoftDeletePeriod': '00:00:00', 'Recoverability':'Enabled'}"
