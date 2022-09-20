@@ -52,8 +52,8 @@ def video_to_frames(input_loc, output_loc):
 
 if __name__=="__main__":
 
-    input_loc = 'C:\\Users\\babal\\Downloads\\GX010001.mp4'
-    output_loc = 'C:\\Users\\babal\\Downloads\\pinballimages2\\'
+    input_loc = 'C:\\Users\\babal\\Downloads\\WIN_20220920_11_27_37_Pro.mp4'
+    output_loc = 'C:\\Users\\babal\\Downloads\\pinballimages3\\'
     time_start = time.time()
     video_to_frames(input_loc, output_loc)
     print(" Time taken = " + str(time.process_time() - time_start))
