@@ -14,7 +14,8 @@ PROB_THRESHOLD = 0.40  # Minimum probably to show results.
 print(" Onnx Runtime : " + onnxruntime.get_device())
 
 #labels = ['ballfail','ballinendzone','flaphit','SteelBall','zone1','zone2']
-labels = ['ballfail','ballinendzone','ballinplunge','flaphit','SteelBall','zone1','zone2']
+# labels = ['ballfail','ballinendzone','ballinplunge','flaphit','SteelBall','zone1','zone2']
+labels = ['BallinPlunger','EndZone','FailZone','GameOver','leftflap','RightFlap','SteelBall']
 
 providers = [
     ('CUDAExecutionProvider', {
@@ -77,7 +78,7 @@ class Model:
                 if (class_id >= 0 and class_id <= 3):
                     print(f"Az Cog Label: {labels[class_id]}, Probability: {score:.5f}, box: ({box[0]:.5f}, {box[1]:.5f}) ({box[2]:.5f}, {box[3]:.5f})")
 
-model_path = "steelball2/model.onnx"
+model_path = "steelball3/model.onnx"
 
 model = Model(model_path)
 
@@ -100,7 +101,7 @@ while(True):
     assert set(outputs.keys()) == set(['detected_boxes', 'detected_classes', 'detected_scores'])
     for box, class_id, score in zip(outputs['detected_boxes'][0], outputs['detected_classes'][0], outputs['detected_scores'][0]):
 	    if score > PROB_THRESHOLD:
-	        if (class_id >= 0 and class_id <= 4):
+	        if (class_id >= 0 and class_id <= 6):
                     print(f"Az Cog Label: {labels[class_id]}, Probability: {score:.5f}, box: ({box[0]:.5f}, {box[1]:.5f}) ({box[2]:.5f}, {box[3]:.5f})")
                     x = np.int32(box[0] * frame.shape[1])
                     y = np.int32(box[1] * frame.shape[0])
