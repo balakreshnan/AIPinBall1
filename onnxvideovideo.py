@@ -124,7 +124,7 @@ while(True):
                     point_two = (x + (w - x), y + (h - y))
 	                # img1 = cv2.rectangle(jetson.utils.cudaToNumpy(img), point_one, point_two, color=(255,211,67), thickness=2)
                     cv2.rectangle(frame, point_one, point_two, color=(255,211,67), thickness=2)
-                    cv2.putText(frame,labels[class_id],(x+w+10,y+h),0,0.3,(0,255,0))
+                    cv2.putText(frame,labels[class_id],(x+w+50,y+h),0,0.3,(0,255,0))
                     print(x,y,w,h, point_two)
 	            #jetson.utils.cudaDrawRect(img, (x, y, w, h), (255,127,0,200))
 	            # print(x, y, w, h)
