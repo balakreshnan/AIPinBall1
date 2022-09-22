@@ -108,6 +108,11 @@ prevx = 0
 prevy = 0
 prevw = 0
 prevh = 0
+movingleft = 0
+movingright = 0
+movingup = 0
+movingdown = 0
+distance = 0
 
 vid = cv2.VideoCapture('C:\\Users\\babal\\Downloads\\WIN_20220920_11_27_37_Pro.mp4')
 vid.set(cv2.CAP_PROP_FPS,90)
@@ -152,7 +157,7 @@ while(True):
     for box, class_id, score in zip(outputs['detected_boxes'][0], outputs['detected_classes'][0], outputs['detected_scores'][0]):
 	    if score > PROB_THRESHOLD:
 	        if (class_id >= 0 and class_id <= 6):
-                    # print(f"Az Cog Label: {labels[class_id]}, Probability: {score:.5f}, box: ({box[0]:.5f}, {box[1]:.5f}) ({box[2]:.5f}, {box[3]:.5f})")
+                    print(f"Az Cog Label: {labels[class_id]}, Probability: {score:.5f}, box: ({box[0]:.5f}, {box[1]:.5f}) ({box[2]:.5f}, {box[3]:.5f})")
                     x = np.int32(box[0] * frame.shape[1])
                     y = np.int32(box[1] * frame.shape[0])
                     w = np.int32(box[2] * frame.shape[1])
@@ -166,22 +171,35 @@ while(True):
                     # Distance = sqrt((x+(w-x))**2 + (y+(h - y))**2)
                     # print("The distance between this two points is", str(round(Distance, 4))+" units")
                     if previousframe is not None:
-                        # if labels[class_id] == "SteelBall":
+                        if labels[class_id] == "SteelBall":
                             # print(" Ball Distance from the camera is ", str(round(x - prevx, 4))+" units")
-                            # if (x - prevx) > 0:
+                            distance = round(x - prevx, 4)
+                            if (x - prevx) > 0:
+                                movingright = 1
+                                movingleft = 0
                                 # print("The ball is moving right")
                                 # print(" Ball Distance from the camera is ", str(round(x - prevx, 4))+" units")
-                            # elif (x - prevx) < 0:
-                                #print("The ball is moving left")
-                                #print(" Ball Distance from the camera is ", str(round(x - prevx, 4))+" units")
-                            # else:
-                            #     print("The ball is not moving")
-                            #if (y - prevy) > 0:
-                            #    print("The ball is moving down")
-                            #elif (y - prevy) < 0:
-                            #    print("The ball is moving up")
-                            #else:
-                            #    print("The ball is not moving")
+                            elif (x - prevx) < 0:
+                                movingright = 0
+                                movingleft = 1
+                                # print("The ball is moving left")
+                                # print(" Ball Distance from the camera is ", str(round(x - prevx, 4))+" units")
+                            else:
+                                movingright = 0
+                                movingleft = 0
+                                # print("The ball is not moving")
+                            if (y - prevy) > 0:
+                                movingup = 0
+                                movingdown = 1
+                                # print("The ball is moving down")
+                            elif (y - prevy) < 0:
+                                movingup = 1
+                                movingdown = 0
+                                # print("The ball is moving up")
+                            else:
+                                movingup = 0
+                                movingdown = 0
+                                # print("The ball is not moving")
 
                         previousframe = frame
                         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -206,7 +224,8 @@ while(True):
                         # frame_width = int(vid.get(3))
                         # frame_height = int(vid.get(4))
                         # frame_size = (frame_width,frame_height)
-                        # fps = 20                        
+                        # fps = 20
+                        print ('Distance: ', distance, 'Moving Right: ', movingright, 'Moving Left: ', movingleft, 'Moving Up: ', movingup, 'Moving Down: ', movingdown)         
 
     print(" Time taken = " + str(time.process_time() - start))
 
