@@ -157,18 +157,22 @@ while(True):
                     # Distance = sqrt((x+(w-x))**2 + (y+(h - y))**2)
                     # print("The distance between this two points is", str(round(Distance, 4))+" units")
                     if previousframe is not None:
-                        if (x - prevx) > 0:
-                            print("The ball is moving right")
-                        elif (x - prevx) < 0:
-                            print("The ball is moving left")
-                        else:
-                            print("The ball is not moving")
-                        if (y - prevy) > 0:
-                            print("The ball is moving down")
-                        elif (y - prevy) < 0:
-                            print("The ball is moving up")
-                        else:
-                            print("The ball is not moving")
+                        if labels[class_id] == "SteelBall":
+                            # print(" Ball Distance from the camera is ", str(round(x - prevx, 4))+" units")
+                            if (x - prevx) > 0:
+                                print("The ball is moving right")
+                                print(" Ball Distance from the camera is ", str(round(x - prevx, 4))+" units")
+                            elif (x - prevx) < 0:
+                                print("The ball is moving left")
+                                print(" Ball Distance from the camera is ", str(round(x - prevx, 4))+" units")
+                            else:
+                                print("The ball is not moving")
+                            if (y - prevy) > 0:
+                                print("The ball is moving down")
+                            elif (y - prevy) < 0:
+                                print("The ball is moving up")
+                            else:
+                                print("The ball is not moving")
                         previousframe = frame
                         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                         p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray, frame_gray, p0, None, **lk_params)
@@ -185,6 +189,7 @@ while(True):
                         img = cv2.add(frame, mask)
                         imS = cv2.resize(img, (960, 540))                # Resize image
                         cv2.imshow("output", imS)
+                        
 
     print(" Time taken = " + str(time.process_time() - start))
     
