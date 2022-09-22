@@ -1,0 +1,9 @@
+C:\Users\AiPinBot\AIPinBall1\PinballController\PinballController\bin\Debug\net471\PinballController.dll
+C:\Users\AiPinBot\AIPinBall1\PinballController\PinballController\bin\Debug\net471\PinballController.pdb
+C:\Users\AiPinBot\AIPinBall1\PinballController\PinballController\obj\Debug\net471\PinballController.csproj.AssemblyReference.cache
+C:\Users\AiPinBot\AIPinBall1\PinballController\PinballController\obj\Debug\net471\PinballController.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\AiPinBot\AIPinBall1\PinballController\PinballController\obj\Debug\net471\PinballController.AssemblyInfoInputs.cache
+C:\Users\AiPinBot\AIPinBall1\PinballController\PinballController\obj\Debug\net471\PinballController.AssemblyInfo.cs
+C:\Users\AiPinBot\AIPinBall1\PinballController\PinballController\obj\Debug\net471\PinballController.csproj.CoreCompileInputs.cache
+C:\Users\AiPinBot\AIPinBall1\PinballController\PinballController\obj\Debug\net471\PinballController.dll
+C:\Users\AiPinBot\AIPinBall1\PinballController\PinballController\obj\Debug\net471\PinballController.pdb
