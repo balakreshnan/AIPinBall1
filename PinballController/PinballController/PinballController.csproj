@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net471</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.EnterpriseServices" />
+  </ItemGroup>
+
+</Project>
