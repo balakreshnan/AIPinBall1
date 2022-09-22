@@ -5,15 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO.Ports;
 using System.Runtime.InteropServices;
-using System.EnterpriseServices;
+using RGiesecke.DllExport;
 namespace PinballController
 {
 
 
-
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.None)]
-    public class Pinball : ServicedComponent, IPinball
+    public class Pinball: IPinball
     {
 
         static bool _continue;
@@ -117,6 +114,7 @@ namespace PinballController
         /// Also called triggered.
         /// </summary>
         /// <param name="channel"></param>
+        [DllExport("ControlPushAndRelease", CallingConvention = CallingConvention.Cdecl)]
         public void ControlPushAndRelease(PinballControls mask)
         {
 
@@ -167,6 +165,8 @@ namespace PinballController
         /// Connects to the serial port.  Assumes an Arduino with the Pinball sketch is loaded.  
         /// </summary>
         /// <returns></returns>
+        /// 
+        [DllExport("Connect", CallingConvention = CallingConvention.Cdecl)]
         public bool Connect()
         {
             bool rc = true;
