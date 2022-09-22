@@ -86,7 +86,9 @@ if __name__ == '__main__' :
         #sky = frame[0:100, 0:200]
         #cv2.imshow('Video', sky)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        cv2.imshow('Video', frame)
+        # cv2.imshow('Video', frame)
+        imS = cv2.resize(frame, (960, 540))                # Resize image
+        cv2.imshow("output", imS)
 
         if cv2.waitKey(1) == 27:
             exit(0)
