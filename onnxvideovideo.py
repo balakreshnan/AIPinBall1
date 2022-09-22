@@ -8,6 +8,8 @@ import pytesseract
 from PIL import Image
 import cv2
 import onnx
+from math import sqrt
+import math
 
 PROB_THRESHOLD = 0.40  # Minimum probably to show results.
 
@@ -82,6 +84,16 @@ model_path = "steelball3/model.onnx"
 
 model = Model(model_path)
 
+# params for ShiTomasi corner detection
+feature_params = dict( maxCorners = 100,
+                       qualityLevel = 0.3,
+                       minDistance = 7,
+                       blockSize = 7 )
+
+lk_params = dict( winSize  = (15, 15),
+                  maxLevel = 2,
+                  criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
+
 def main():
     print("Hello World!")
     from PIL import Image
@@ -90,6 +102,12 @@ def main():
     #img = Image.open('pinballframe8890.jpg')
     # define a video capture object
 #vid = cv2.VideoCapture(0)
+
+previousframe = None
+prevx = 0
+prevy = 0
+prevw = 0
+prevh = 0
 
 vid = cv2.VideoCapture('C:\\Users\\babal\\Downloads\\WIN_20220920_11_27_37_Pro.mp4')
 vid.set(cv2.CAP_PROP_FPS,90)
@@ -103,6 +121,16 @@ print('Fourcc' ,vid.get(cv2.CAP_PROP_FOURCC))
 print('Hue' ,vid.get(cv2.CAP_PROP_HUE))
 print('RGB' ,vid.get(cv2.CAP_PROP_CONVERT_RGB))
 
+# Create some random colors
+color = np.random.randint(0, 255, (100, 3))
+
+# Take first frame and find corners in it
+ret, frame = vid.read()
+old_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+p0 = cv2.goodFeaturesToTrack(old_gray, mask = None, **feature_params)
+
+# Create a mask image for drawing purposes
+mask = np.zeros_like(frame)
   
 while(True):
       
@@ -126,17 +154,50 @@ while(True):
                     cv2.rectangle(frame, point_one, point_two, color=(255,211,67), thickness=2)
                     # cv2.putText(frame,labels[class_id],(x+w+10,y+h),cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),2,cv2.LINE_AA)
                     cv2.putText(frame,labels[class_id],(x-10,y-10),cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),2,cv2.LINE_AA)
-                    # print(x,y,w,h, point_two)
-	            #jetson.utils.cudaDrawRect(img, (x, y, w, h), (255,127,0,200))
-	            # print(x, y, w, h)
-	            # print(f"box: ({box[0]:.5f}, {box[1]:.5f}) ({box[2]:.5f}, {box[3pip ]:.5f})")
+                    # Distance = sqrt((x+(w-x))**2 + (y+(h - y))**2)
+                    # print("The distance between this two points is", str(round(Distance, 4))+" units")
+                    if previousframe is not None:
+                        if (x - prevx) > 0:
+                            print("The ball is moving right")
+                        elif (x - prevx) < 0:
+                            print("The ball is moving left")
+                        else:
+                            print("The ball is not moving")
+                        if (y - prevy) > 0:
+                            print("The ball is moving down")
+                        elif (y - prevy) < 0:
+                            print("The ball is moving up")
+                        else:
+                            print("The ball is not moving")
+                        previousframe = frame
+                        frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                        p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray, frame_gray, p0, None, **lk_params)
+                        # Select good points
+                        if p1 is not None:
+                            good_new = p1[st==1]
+                            good_old = p0[st==1]
+                        # draw the tracks
+                        for i, (new, old) in enumerate(zip(good_new, good_old)):
+                            a, b = new.ravel()
+                            c, d = old.ravel()
+                            mask = cv2.line(mask, (int(a), int(b)), (int(c), int(d)), color[i].tolist(), 2)
+                            frame = cv2.circle(frame, (int(a), int(b)), 5, color[i].tolist(), -1)
+                        img = cv2.add(frame, mask)
+                        imS = cv2.resize(img, (960, 540))                # Resize image
+                        cv2.imshow("output", imS)
+
     print(" Time taken = " + str(time.process_time() - start))
+    
   
     # Display the resulting frame
     # cv2.imshow('frame', frame)
-    imS = cv2.resize(frame, (960, 540))                # Resize image
-    cv2.imshow("output", imS)
-      
+    # imS = cv2.resize(frame, (960, 540))                # Resize image
+    # cv2.imshow("output", imS)
+    previousframe = frame
+    prevx = x
+    prevy = y
+    prevw = w
+    prevh = h
     # the 'q' button is set as the
     # quitting button you may use any
     # desired button of your choice
