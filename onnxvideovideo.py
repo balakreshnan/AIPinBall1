@@ -131,6 +131,15 @@ p0 = cv2.goodFeaturesToTrack(old_gray, mask = None, **feature_params)
 
 # Create a mask image for drawing purposes
 mask = np.zeros_like(frame)
+
+frame_size = (960, 540)
+# Initialize video writer object
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+# fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
+# fourcc = cv2.VideoWriter_fourcc(*'XVID')
+# fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
+# output = cv2.VideoWriter('C:\\Users\\babal\\Downloads\\output_video_from_file.mp4', fourcc, 60, frame_size, 1)
+output = cv2.VideoWriter('C:\\Users\\babal\\Downloads\\output1.mp4',cv2.VideoWriter_fourcc(*'mp4v'), 20, frame_size)
   
 while(True):
       
@@ -143,7 +152,7 @@ while(True):
     for box, class_id, score in zip(outputs['detected_boxes'][0], outputs['detected_classes'][0], outputs['detected_scores'][0]):
 	    if score > PROB_THRESHOLD:
 	        if (class_id >= 0 and class_id <= 6):
-                    print(f"Az Cog Label: {labels[class_id]}, Probability: {score:.5f}, box: ({box[0]:.5f}, {box[1]:.5f}) ({box[2]:.5f}, {box[3]:.5f})")
+                    # print(f"Az Cog Label: {labels[class_id]}, Probability: {score:.5f}, box: ({box[0]:.5f}, {box[1]:.5f}) ({box[2]:.5f}, {box[3]:.5f})")
                     x = np.int32(box[0] * frame.shape[1])
                     y = np.int32(box[1] * frame.shape[0])
                     w = np.int32(box[2] * frame.shape[1])
@@ -157,22 +166,23 @@ while(True):
                     # Distance = sqrt((x+(w-x))**2 + (y+(h - y))**2)
                     # print("The distance between this two points is", str(round(Distance, 4))+" units")
                     if previousframe is not None:
-                        if labels[class_id] == "SteelBall":
+                        # if labels[class_id] == "SteelBall":
                             # print(" Ball Distance from the camera is ", str(round(x - prevx, 4))+" units")
-                            if (x - prevx) > 0:
-                                print("The ball is moving right")
-                                print(" Ball Distance from the camera is ", str(round(x - prevx, 4))+" units")
-                            elif (x - prevx) < 0:
-                                print("The ball is moving left")
-                                print(" Ball Distance from the camera is ", str(round(x - prevx, 4))+" units")
-                            else:
-                                print("The ball is not moving")
-                            if (y - prevy) > 0:
-                                print("The ball is moving down")
-                            elif (y - prevy) < 0:
-                                print("The ball is moving up")
-                            else:
-                                print("The ball is not moving")
+                            # if (x - prevx) > 0:
+                                # print("The ball is moving right")
+                                # print(" Ball Distance from the camera is ", str(round(x - prevx, 4))+" units")
+                            # elif (x - prevx) < 0:
+                                #print("The ball is moving left")
+                                #print(" Ball Distance from the camera is ", str(round(x - prevx, 4))+" units")
+                            # else:
+                            #     print("The ball is not moving")
+                            #if (y - prevy) > 0:
+                            #    print("The ball is moving down")
+                            #elif (y - prevy) < 0:
+                            #    print("The ball is moving up")
+                            #else:
+                            #    print("The ball is not moving")
+
                         previousframe = frame
                         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                         p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray, frame_gray, p0, None, **lk_params)
@@ -187,13 +197,19 @@ while(True):
                             mask = cv2.line(mask, (int(a), int(b)), (int(c), int(d)), color[i].tolist(), 2)
                             frame = cv2.circle(frame, (int(a), int(b)), 5, color[i].tolist(), -1)
                         img = cv2.add(frame, mask)
-                        imS = cv2.resize(img, (960, 540))                # Resize image
+                        imS = cv2.resize(img, (960, 540))
+                        # Resize image
+                        # output.write(imS)
                         cv2.imshow("output", imS)
-                        
+                        # print(' out')
+                        # Obtain frame size information using get() method
+                        # frame_width = int(vid.get(3))
+                        # frame_height = int(vid.get(4))
+                        # frame_size = (frame_width,frame_height)
+                        # fps = 20                        
 
     print(" Time taken = " + str(time.process_time() - start))
-    
-  
+
     # Display the resulting frame
     # cv2.imshow('frame', frame)
     # imS = cv2.resize(frame, (960, 540))                # Resize image
@@ -209,6 +225,7 @@ while(True):
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
   
+output.release()
 # After the loop release the cap object
 vid.release()
 # Destroy all the windows
