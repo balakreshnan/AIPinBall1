@@ -89,12 +89,12 @@ def main():
     #file_path = 'pinballframe8890.jpg'
     #img = Image.open('pinballframe8890.jpg')
     # define a video capture object
-#vid = cv2.VideoCapture(0)
+vid = cv2.VideoCapture(0)
 
-vid = cv2.VideoCapture('C:\\Users\\babal\\Downloads\\WIN_20220920_11_27_37_Pro.mp4')
+#vid = cv2.VideoCapture('C:\\Users\\babal\\Downloads\\WIN_20220920_11_27_37_Pro.mp4')
 vid.set(cv2.CAP_PROP_FPS,90)
-#ret = vid.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-#ret = vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+ret = vid.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+ret = vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
 print('FPS ',vid.get(cv2.CAP_PROP_FPS))
 print('Width ',vid.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -124,16 +124,16 @@ while(True):
                     point_two = (x + (w - x), y + (h - y))
 	                # img1 = cv2.rectangle(jetson.utils.cudaToNumpy(img), point_one, point_two, color=(255,211,67), thickness=2)
                     cv2.rectangle(frame, point_one, point_two, color=(255,211,67), thickness=2)
-                    # cv2.putText(frame,labels[class_id],(x+w+10,y+h),cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),2,cv2.LINE_AA)
+                    #MWM --cv2.putText(frame,labels[class_id],(x+w+10,y+h),0,0.3,(0,255,0))
                     cv2.putText(frame,labels[class_id],(x-10,y-10),cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),2,cv2.LINE_AA)
-                    # print(x,y,w,h, point_two)
+                    print(x,y,w,h, point_two)
 	            #jetson.utils.cudaDrawRect(img, (x, y, w, h), (255,127,0,200))
 	            # print(x, y, w, h)
 	            # print(f"box: ({box[0]:.5f}, {box[1]:.5f}) ({box[2]:.5f}, {box[3pip ]:.5f})")
     print(" Time taken = " + str(time.process_time() - start))
   
     # Display the resulting frame
-    # cv2.imshow('frame', frame)
+    #cv2.imshow('frame', frame)
     imS = cv2.resize(frame, (960, 540))                # Resize image
     cv2.imshow("output", imS)
       
