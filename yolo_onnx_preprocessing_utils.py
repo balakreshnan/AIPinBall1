@@ -329,6 +329,7 @@ def preprocess(image_url, img_size=640):
 def preprocess1(img0, img_size=640):
 
     img, ratio, pad = letterbox(img0, new_shape=img_size, auto=False, scaleup=False)
+    # print('pad=',pad)
 
     # Convert
     img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x640x640

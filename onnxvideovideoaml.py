@@ -138,6 +138,7 @@ def get_predictions_from_ONNX(onnx_session,img_data):
     sess_output = onnx_session.get_outputs()
     # predict with ONNX Runtime
     output_names = [ output.name for output in sess_output]
+    # print(output_names)
     pred = onnx_session.run(output_names=output_names, input_feed={sess_input[0].name: img_data})
     return pred[0]
 
@@ -294,36 +295,48 @@ while(True):
     # print(session.get_inputs()[0].shape)
     x = np.array(img).astype('float32').reshape([1, channel, height_onnx, width_onnx])
     x = x / 255
+
+    # y = preprocessimg.tolist()
+    # result = get_predictions_from_ONNX(session, preprocessimg)
     result = get_predictions_from_ONNX(session, x)
     #print(result)
 
 
     bounding_boxes_batch = []
     pad_list = []
-    pad_list.append(preprocess1(frame))
+    pad_list.append(preprocessimg)
+    #print(preprocessimg[1])
 
-    result_final = non_max_suppression(torch.from_numpy(result), conf_thres=0.1,
-    iou_thres=0.5)
+    result_final = non_max_suppression(torch.from_numpy(result), conf_thres=0.1, iou_thres=0.5)
+
+    print('results: ', result_final)
+
+    #for rs in result:
+    #    #print('line: ' ,rs)
+    #    for rs1 in rs:
+    #        print(' Array details:', rs1)
 
     #for result_i, pad in zip(result_final, pad_list):
+    #    print('result_1:' , result_i)
     #    label, image_shape = _convert_to_rcnn_output(result_i, height_onnx, width_onnx, pad)
     #    bounding_boxes_batch.append(_get_prediction(label, image_shape, labels))
-    #    print(result_i)
+        
     #print(json.dumps(bounding_boxes_batch, indent=1))
 
     #image_boxes = bounding_boxes_batch[1]
 
     serialised = dumps(result)
     #print(serialised)
-    #print('Batch = ', batch)
-    print(channel, height_onnx, width_onnx)
+    # print('Batch = ', batch)
+    # print(channel, height_onnx, width_onnx)
+    print('length = ', len(result))
 
     print(" Time taken = " + str(time.process_time() - start))
 
     imS = cv2.resize(img, (960, 540))
 
     # Display the resulting frame
-    cv2.imshow('frame', imS)
+    # cv2.imshow('frame', imS)
 
     # the 'q' button is set as the
     # quitting button you may use any
