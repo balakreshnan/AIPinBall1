@@ -23,6 +23,7 @@ from onnxruntime_object_detection import ObjectDetection
 import tempfile
 #import tensorflow as tf
 from torchvision import transforms
+from json_tricks import dumps
 
 
 PROB_THRESHOLD = 0.40  # Minimum probably to show results.
@@ -252,7 +253,9 @@ for idx, output in enumerate(range(len(sess_output))):
     Output type  : {output_type}")
 
 batch, channel, height_onnx, width_onnx = session.get_inputs()[0].shape
-batch, channel, height_onnx, width_onnx
+#batch, channel, height_onnx, width_onnx
+
+print(session.get_inputs()[0].shape)
 
 frame_size = (960, 540)
 # Initialize video writer object
@@ -289,10 +292,10 @@ while(True):
     img = cv2.resize(frame, (640, 640))
     # convert image to numpy
     # print(session.get_inputs()[0].shape)
-    x = np.array(img).astype('float32').reshape([1, 3, 640, 640])
+    x = np.array(img).astype('float32').reshape([1, channel, height_onnx, width_onnx])
     x = x / 255
     result = get_predictions_from_ONNX(session, x)
-    print(result)
+    #print(result)
 
 
     bounding_boxes_batch = []
@@ -302,9 +305,6 @@ while(True):
     result_final = non_max_suppression(torch.from_numpy(result), conf_thres=0.1,
     iou_thres=0.5)
 
-    #predictions = od_model.predict_image(frame, pad_list=pad_list)
-    #print(predictions)
-
     #for result_i, pad in zip(result_final, pad_list):
     #    label, image_shape = _convert_to_rcnn_output(result_i, height_onnx, width_onnx, pad)
     #    bounding_boxes_batch.append(_get_prediction(label, image_shape, labels))
@@ -312,6 +312,11 @@ while(True):
     #print(json.dumps(bounding_boxes_batch, indent=1))
 
     #image_boxes = bounding_boxes_batch[1]
+
+    serialised = dumps(result)
+    #print(serialised)
+    #print('Batch = ', batch)
+    print(channel, height_onnx, width_onnx)
 
     print(" Time taken = " + str(time.process_time() - start))
 
