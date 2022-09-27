@@ -12,7 +12,7 @@ import onnx
 from math import sqrt
 import math
 import json
-from yolo_onnx_preprocessing_utils import preprocess, preprocess1
+from yolo_onnx_preprocessing_utils import preprocess, preprocess1, frame_resize
 from yolo_onnx_preprocessing_utils import non_max_suppression, _convert_to_rcnn_output
 import torch
 from datetime import datetime
@@ -258,6 +258,11 @@ batch, channel, height_onnx, width_onnx = session.get_inputs()[0].shape
 
 print(session.get_inputs()[0].shape)
 
+from onnxruntime_yolov5 import initialize_yolov5
+labelPath = f'steelball1aml/labels.json'
+labelFile = 'labels.json'
+initialize_yolov5(onnx_model_path, labelPath, 640,0.4,0.5) 
+
 frame_size = (960, 540)
 # Initialize video writer object
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -298,42 +303,50 @@ while(True):
 
     # y = preprocessimg.tolist()
     # result = get_predictions_from_ONNX(session, preprocessimg)
-    result = get_predictions_from_ONNX(session, x)
+
+    #preprocessimg = frame_resize(frame)
+
+    #result = get_predictions_from_ONNX(session, x)
     #print(result)
+    h, w = frame.shape[:2]
 
+    frame_optimized, ratio, pad_list = frame_resize(frame, 640)
+    from onnxruntime_yolov5 import predict_yolov5
+    result = predict_yolov5(frame_optimized, pad_list)
+    predictions = result['predictions'][0]
+    new_w = int(ratio[0]*w)
+    new_h = int(ratio[1]*h)
+    frame_resized = cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_AREA)
+    annotated_frame = frame_resized.copy()
 
-    bounding_boxes_batch = []
-    pad_list = []
-    pad_list.append(preprocessimg)
-    #print(preprocessimg[1])
+    #print(predictions)
 
-    result_final = non_max_suppression(torch.from_numpy(result), conf_thres=0.1, iou_thres=0.5)
+    detection_count = len(predictions)
+    #print(f"Detection Count: {detection_count}")
 
-    print('results: ', result_final)
+    if detection_count > 0:
+        for i in range(detection_count):
+            bounding_box = predictions[i]['bbox']
+            tag_name = predictions[i]['labelName']
+            probability = round(predictions[i]['probability'],2)
+            image_text = f"{probability}%"
+            color = (0, 255, 0)
+            thickness = 1
+            xmin = int(bounding_box["left"])
+            xmax = int(bounding_box["width"])
+            ymin = int(bounding_box["top"])
+            ymax = int(bounding_box["height"])
+            start_point = (int(bounding_box["left"]), int(bounding_box["top"]))
+            end_point = (int(bounding_box["width"]), int(bounding_box["height"]))
+            annotated_frame = cv2.rectangle(annotated_frame, start_point, end_point, color, thickness)
+            cv2.putText(annotated_frame,tag_name + '-' + image_text,(xmin-10,ymin-10),cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),2,cv2.LINE_AA)
+            imS = cv2.resize(annotated_frame, (960, 540))
+            cv2.imshow('frame', imS)
 
-    #for rs in result:
-    #    #print('line: ' ,rs)
-    #    for rs1 in rs:
-    #        print(' Array details:', rs1)
-
-    #for result_i, pad in zip(result_final, pad_list):
-    #    print('result_1:' , result_i)
-    #    label, image_shape = _convert_to_rcnn_output(result_i, height_onnx, width_onnx, pad)
-    #    bounding_boxes_batch.append(_get_prediction(label, image_shape, labels))
-        
-    #print(json.dumps(bounding_boxes_batch, indent=1))
-
-    #image_boxes = bounding_boxes_batch[1]
-
-    serialised = dumps(result)
-    #print(serialised)
-    # print('Batch = ', batch)
-    # print(channel, height_onnx, width_onnx)
-    print('length = ', len(result))
 
     print(" Time taken = " + str(time.process_time() - start))
 
-    imS = cv2.resize(img, (960, 540))
+    # imS = cv2.resize(img, (960, 540))
 
     # Display the resulting frame
     # cv2.imshow('frame', imS)
