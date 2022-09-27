@@ -318,6 +318,7 @@ while(True):
     new_h = int(ratio[1]*h)
     frame_resized = cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_AREA)
     annotated_frame = frame_resized.copy()
+    print(json.dumps(' Prediction output: '+ str(predictions), indent=1))
 
     #print(predictions)
 
@@ -339,7 +340,7 @@ while(True):
             start_point = (int(bounding_box["left"]), int(bounding_box["top"]))
             end_point = (int(bounding_box["width"]), int(bounding_box["height"]))
             annotated_frame = cv2.rectangle(annotated_frame, start_point, end_point, color, thickness)
-            cv2.putText(annotated_frame,tag_name + '-' + image_text,(xmin-10,ymin-10),cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),2,cv2.LINE_AA)
+            cv2.putText(annotated_frame,tag_name + '-' + image_text,(xmin-10,ymin-10),cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),1,cv2.LINE_AA)
             imS = cv2.resize(annotated_frame, (960, 540))
             cv2.imshow('frame', imS)
 

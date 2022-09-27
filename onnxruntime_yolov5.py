@@ -97,7 +97,7 @@ class ONNXRuntimeObjectDetection():
             ttl_preds.append(_get_prediction(label, image_shape, self.classes))
 
         if len(ttl_preds) > 0:
-            print(json.dumps(ttl_preds, indent=1))
+            # print(json.dumps(ttl_preds, indent=1))
             return ttl_preds
         else:
             print("No predictions passed the threshold")  
