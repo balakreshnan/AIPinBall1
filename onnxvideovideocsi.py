@@ -2,7 +2,6 @@ import argparse
 import pathlib
 import numpy as np
 import onnxruntime
-import onnxruntime as ort
 import PIL.Image
 import time
 import pytesseract
@@ -11,19 +10,6 @@ import cv2
 import onnx
 from math import sqrt
 import math
-import json
-from yolo_onnx_preprocessing_utils import preprocess, preprocess1
-from yolo_onnx_preprocessing_utils import non_max_suppression, _convert_to_rcnn_output
-import torch
-from datetime import datetime
-import os
-#from objdict import ObjDict
-from yolo_onnx_preprocessing_utils import letterbox, non_max_suppression, _convert_to_rcnn_output
-from onnxruntime_object_detection import ObjectDetection
-import tempfile
-#import tensorflow as tf
-from torchvision import transforms
-
 
 PROB_THRESHOLD = 0.40  # Minimum probably to show results.
 
@@ -31,10 +17,8 @@ print(" Onnx Runtime : " + onnxruntime.get_device())
 
 #labels = ['ballfail','ballinendzone','flaphit','SteelBall','zone1','zone2']
 # labels = ['ballfail','ballinendzone','ballinplunge','flaphit','SteelBall','zone1','zone2']
-#labels = ['BallinPlunger','EndZone','FailZone','GameOver','leftflap','RightFlap','SteelBall']
+labels = ['Blue','Red','Yellow']
 
-labels_file = "steelball1aml/labels.json"
-onnx_model_path = "steelball1aml/model.onnx"
 
 providers = [
     ('CUDAExecutionProvider', {
@@ -46,11 +30,6 @@ providers = [
     }),
     'CPUExecutionProvider',
 ]
-
-with open(labels_file) as f:
-    labels = json.load(f)
-print(labels)
-
 
 class Model:
     def __init__(self, model_filepath):
@@ -91,27 +70,6 @@ class Model:
         outputs = self.session.run(self.output_names, {self.input_name: input_array.astype(self.input_type)})
         return {name: outputs[i] for i, name in enumerate(self.output_names)}
 
-    def predict1(self, image_filepath):
-        #image = PIL.Image.open(image_filepath).resize(self.input_shape)
-	    #height = image_filepath.shape[0]
-	    #width = image_filepath.shape[1]
-        #image_array = jetson.utils.cudaToNumpy(image_filepath)
-        #image = PIL.Image.fromarray(image_array, 'RGB').resize(self.input_shape)
-        # image = PIL.Image.frombuffer("RGBX", (720,1280), image_filepath).resize(self.input_shape)
-        # image = image_filepath.resize(320,320)
-        img = cv2.cvtColor(image_filepath, cv2.COLOR_BGR2RGB)
-        # image = Image.fromarray(img)
-        image = PIL.Image.fromarray(img, 'RGB').resize(self.input_shape)
-        input_array = np.array(image, dtype=np.float32)[np.newaxis, :, :, :]
-        input_array = input_array.transpose((0, 3, 1, 2))  # => (N, C, H, W)
-        if self.is_bgr:
-            input_array = input_array[:, (2, 1, 0), :, :]
-        if not self.is_range255:
-            input_array = input_array / 255  # => Pixel values should be in range [0, 1]
-
-        outputs = self.session.run(self.output_names, {self.input_name: input_array.astype(self.input_type)})
-        return outputs[0]
-
 
     def print_outputs(outputs):
         assert set(outputs.keys()) == set(['detected_boxes', 'detected_classes', 'detected_scores'])
@@ -123,58 +81,7 @@ class Model:
                 if (class_id >= 0 and class_id <= 3):
                     print(f"Az Cog Label: {labels[class_id]}, Probability: {score:.5f}, box: ({box[0]:.5f}, {box[1]:.5f}) ({box[2]:.5f}, {box[3]:.5f})")
 
-def get_predictions_from_ONNX(onnx_session,img_data):
-    """perform predictions with ONNX Runtime
-    
-    :param onnx_session: onnx model session
-    :type onnx_session: class InferenceSession
-    :param img_data: pre-processed numpy image
-    :type img_data: ndarray with shape 1xCxHxW
-    :return: boxes, labels , scores 
-    :rtype: list
-    """
-    sess_input = onnx_session.get_inputs()
-    sess_output = onnx_session.get_outputs()
-    # predict with ONNX Runtime
-    output_names = [ output.name for output in sess_output]
-    pred = onnx_session.run(output_names=output_names, input_feed={sess_input[0].name: img_data})
-    return pred[0]
-
-def _get_box_dims(image_shape, box):
-    box_keys = ['topX', 'topY', 'bottomX', 'bottomY']
-    height, width = image_shape[0], image_shape[1]
-
-    box_dims = dict(zip(box_keys, [coordinate.item() for coordinate in box]))
-
-    box_dims['topX'] = box_dims['topX'] * 1.0 / width
-    box_dims['bottomX'] = box_dims['bottomX'] * 1.0 / width
-    box_dims['topY'] = box_dims['topY'] * 1.0 / height
-    box_dims['bottomY'] = box_dims['bottomY'] * 1.0 / height
-
-    return box_dims
-
-def _get_prediction(label, image_shape, classes):
-    
-    boxes = np.array(label["boxes"])
-    labels = np.array(label["labels"])
-    labels = [label[0] for label in labels]
-    scores = np.array(label["scores"])
-    scores = [score[0] for score in scores]
-
-    bounding_boxes = []
-    for box, label_index, score in zip(boxes, labels, scores):
-        box_dims = _get_box_dims(image_shape, box)
-
-        box_record = {'box': box_dims,
-                      'label': classes[label_index],
-                      'score': score.item()}
-
-        bounding_boxes.append(box_record)
-
-    return bounding_boxes
-
-
-model_path = "steelball1aml/model.onnx"
+model_path = "csitestbed1/model.onnx"
 
 model = Model(model_path)
 
@@ -209,6 +116,7 @@ movingdown = 0
 distance = 0
 
 vid = cv2.VideoCapture('C:\\Users\\babal\\Downloads\\WIN_20220920_11_27_37_Pro.mp4')
+# vid = cv2.VideoCapture(0)
 vid.set(cv2.CAP_PROP_FPS,90)
 #ret = vid.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
 #ret = vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
@@ -231,29 +139,6 @@ p0 = cv2.goodFeaturesToTrack(old_gray, mask = None, **feature_params)
 # Create a mask image for drawing purposes
 mask = np.zeros_like(frame)
 
-session = onnxruntime.InferenceSession(onnx_model_path, providers=providers)
-
-sess_input = session.get_inputs()
-sess_output = session.get_outputs()
-print(f"No. of inputs : {len(sess_input)}, No. of outputs : {len(sess_output)}")
-
-for idx, input_ in enumerate(range(len(sess_input))):
-    input_name = sess_input[input_].name
-    input_shape = sess_input[input_].shape
-    input_type = sess_input[input_].type
-    print(f"{idx} Input name : { input_name }, Input shape : {input_shape}, \
-    Input type  : {input_type}")  
-
-for idx, output in enumerate(range(len(sess_output))):
-    output_name = sess_output[output].name
-    output_shape = sess_output[output].shape
-    output_type = sess_output[output].type
-    print(f" {idx} Output name : {output_name}, Output shape : {output_shape}, \
-    Output type  : {output_type}")
-
-batch, channel, height_onnx, width_onnx = session.get_inputs()[0].shape
-batch, channel, height_onnx, width_onnx
-
 frame_size = (960, 540)
 # Initialize video writer object
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -262,64 +147,99 @@ fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 # fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
 # output = cv2.VideoWriter('C:\\Users\\babal\\Downloads\\output_video_from_file.mp4', fourcc, 60, frame_size, 1)
 output = cv2.VideoWriter('C:\\Users\\babal\\Downloads\\output1.mp4',cv2.VideoWriter_fourcc(*'mp4v'), 20, frame_size)
-
-batch_size = session.get_inputs()[0].shape
-print(labels)
-
-# Read until video is completed 
+  
 while(True):
       
     # Capture the video frame
     # by frame
     ret, frame = vid.read()
     start = time.process_time()
-    #outputs = model.predict1(frame)
-    #print(outputs)
-    #outputs = model.predict1(frame)
-    #image = PIL.Image.fromarray(frame, 'RGB').resize(640,640)
-    #assert batch_size == frame.shape[0]
-    #print(session.get_inputs()[0].shape[2:])
-    #img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    # image = Image.fromarray(img)
-    #image = PIL.Image.fromarray(img, 'RGB').resize(frame.input_shape)
-    #input_array = np.array(image, dtype=np.float32)[np.newaxis, :, :, :]
-    preprocessimg = preprocess1(frame)
-    #convert_tensor = transforms.ToTensor()
+    outputs = model.predict(frame)
+    assert set(outputs.keys()) == set(['detected_boxes', 'detected_classes', 'detected_scores'])
+    for box, class_id, score in zip(outputs['detected_boxes'][0], outputs['detected_classes'][0], outputs['detected_scores'][0]):
+	    if score > PROB_THRESHOLD:
+	        if (class_id >= 0 and class_id <= 2):
+                    print(f"Az Cog Label: {labels[class_id]}, Probability: {score:.5f}, box: ({box[0]:.5f}, {box[1]:.5f}) ({box[2]:.5f}, {box[3]:.5f})")
+                    x = np.int32(box[0] * frame.shape[1])
+                    y = np.int32(box[1] * frame.shape[0])
+                    w = np.int32(box[2] * frame.shape[1])
+                    h = np.int32(box[3] * frame.shape[0])
+                    point_one = (x,y)
+                    point_two = (x + (w - x), y + (h - y))
+	                # img1 = cv2.rectangle(jetson.utils.cudaToNumpy(img), point_one, point_two, color=(255,211,67), thickness=2)
+                    cv2.rectangle(frame, point_one, point_two, color=(255,211,67), thickness=2)
+                    # cv2.putText(frame,labels[class_id],(x+w+10,y+h),cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),2,cv2.LINE_AA)
+                    cv2.putText(frame,labels[class_id],(x-10,y-10),cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),2,cv2.LINE_AA)
+                    # Distance = sqrt((x+(w-x))**2 + (y+(h - y))**2)
+                    # print("The distance between this two points is", str(round(Distance, 4))+" units")
+                    if previousframe is not None:
+                        if labels[class_id] == "SteelBall":
+                            # print(" Ball Distance from the camera is ", str(round(x - prevx, 4))+" units")
+                            distance = round(x - prevx, 4)
+                            if (x - prevx) > 0:
+                                movingright = 1
+                                movingleft = 0
+                                # print("The ball is moving right")
+                                # print(" Ball Distance from the camera is ", str(round(x - prevx, 4))+" units")
+                            elif (x - prevx) < 0:
+                                movingright = 0
+                                movingleft = 1
+                                # print("The ball is moving left")
+                                # print(" Ball Distance from the camera is ", str(round(x - prevx, 4))+" units")
+                            else:
+                                movingright = 0
+                                movingleft = 0
+                                # print("The ball is not moving")
+                            if (y - prevy) > 0:
+                                movingup = 0
+                                movingdown = 1
+                                # print("The ball is moving down")
+                            elif (y - prevy) < 0:
+                                movingup = 1
+                                movingdown = 0
+                                # print("The ball is moving up")
+                            else:
+                                movingup = 0
+                                movingdown = 0
+                                # print("The ball is not moving")
 
-    img = cv2.resize(frame, (640, 640))
-    # convert image to numpy
-    # print(session.get_inputs()[0].shape)
-    x = np.array(img).astype('float32').reshape([1, 3, 640, 640])
-    x = x / 255
-    result = get_predictions_from_ONNX(session, x)
-    print(result)
-
-
-    bounding_boxes_batch = []
-    pad_list = []
-    pad_list.append(preprocess1(frame))
-
-    result_final = non_max_suppression(torch.from_numpy(result), conf_thres=0.1,
-    iou_thres=0.5)
-
-    #predictions = od_model.predict_image(frame, pad_list=pad_list)
-    #print(predictions)
-
-    #for result_i, pad in zip(result_final, pad_list):
-    #    label, image_shape = _convert_to_rcnn_output(result_i, height_onnx, width_onnx, pad)
-    #    bounding_boxes_batch.append(_get_prediction(label, image_shape, labels))
-    #    print(result_i)
-    #print(json.dumps(bounding_boxes_batch, indent=1))
-
-    #image_boxes = bounding_boxes_batch[1]
+                        previousframe = frame
+                        frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                        p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray, frame_gray, p0, None, **lk_params)
+                        # Select good points
+                        if p1 is not None:
+                            good_new = p1[st==1]
+                            good_old = p0[st==1]
+                        # draw the tracks
+                        for i, (new, old) in enumerate(zip(good_new, good_old)):
+                            a, b = new.ravel()
+                            c, d = old.ravel()
+                            mask = cv2.line(mask, (int(a), int(b)), (int(c), int(d)), color[i].tolist(), 2)
+                            frame = cv2.circle(frame, (int(a), int(b)), 5, color[i].tolist(), -1)
+                        img = cv2.add(frame, mask)
+                        imS = cv2.resize(img, (960, 540))
+                        # Resize image
+                        # output.write(imS)
+                        cv2.imshow("output", imS)
+                        # print(' out')
+                        # Obtain frame size information using get() method
+                        # frame_width = int(vid.get(3))
+                        # frame_height = int(vid.get(4))
+                        # frame_size = (frame_width,frame_height)
+                        # fps = 20
+                        print ('Distance: ', distance, 'Moving Right: ', movingright, 'Moving Left: ', movingleft, 'Moving Up: ', movingup, 'Moving Down: ', movingdown)         
 
     print(" Time taken = " + str(time.process_time() - start))
 
-    imS = cv2.resize(img, (960, 540))
-
     # Display the resulting frame
-    cv2.imshow('frame', imS)
-
+    # cv2.imshow('frame', frame)
+    # imS = cv2.resize(frame, (960, 540))                # Resize image
+    # cv2.imshow("output", imS)
+    previousframe = frame
+    prevx = x
+    prevy = y
+    prevw = w
+    prevh = h
     # the 'q' button is set as the
     # quitting button you may use any
     # desired button of your choice
