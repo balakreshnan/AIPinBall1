@@ -21,6 +21,9 @@ import os
 from yolo_onnx_preprocessing_utils import letterbox, non_max_suppression, _convert_to_rcnn_output
 from onnxruntime_object_detection import ObjectDetection
 import tempfile
+#import tensorflow as tf
+from torchvision import transforms
+
 
 PROB_THRESHOLD = 0.40  # Minimum probably to show results.
 
@@ -48,16 +51,6 @@ with open(labels_file) as f:
     labels = json.load(f)
 print(labels)
 
-providers = [
-    ('CUDAExecutionProvider', {
-        'device_id': 0,
-        'arena_extend_strategy': 'kNextPowerOfTwo',
-        'gpu_mem_limit': 2 * 1024 * 1024 * 1024,
-        'cudnn_conv_algo_search': 'EXHAUSTIVE',
-        'do_copy_in_default_stream': True,
-    }),
-    'CPUExecutionProvider',
-]
 
 class Model:
     def __init__(self, model_filepath):
@@ -181,69 +174,6 @@ def _get_prediction(label, image_shape, classes):
 
     return bounding_boxes
 
-class ONNXRuntimeObjectDetection(ObjectDetection):
-    """Object Detection class for ONNX Runtime"""
-    def __init__(self, model_filename, labels):
-        super(ONNXRuntimeObjectDetection, self).__init__(labels)
-        model = onnx.load(model_filename)
-        with tempfile.TemporaryDirectory() as dirpath:
-            temp = os.path.join(dirpath, os.path.basename(model_filename))
-            model.graph.input[0].type.tensor_type.shape.dim[-1].dim_param = 'dim1'
-            model.graph.input[0].type.tensor_type.shape.dim[-2].dim_param = 'dim2'
-            onnx.save(model, temp)
-            self.session = onnxruntime.InferenceSession(temp, providers=providers)
-        self.input_name = self.session.get_inputs()[0].name
-        self.is_fp16 = self.session.get_inputs()[0].type == 'tensor(float16)'
-        print("Model pre-loaded on initialize - complete")
-        
-    def predict(self, preprocessed_image):
-        inputs = np.array(preprocessed_image, dtype=np.float32)[np.newaxis,:,:,(2,1,0)] # RGB -> BGR
-        inputs = np.ascontiguousarray(np.rollaxis(inputs, 3, 1))
-
-        if self.is_fp16:
-            inputs = inputs.astype(np.float16)
-
-        outputs = self.session.run(None, {self.input_name: inputs})
-        return np.squeeze(outputs).transpose((1,2,0)).astype(np.float32)
-
-def log_msg(msg):
-    print("{}: {}".format(datetime.now(), msg))
-
-def checkModelExtension(fp):
-  ext = os.path.splitext(fp)[-1].lower()
-  if(ext != ".onnx"):
-    raise Exception(fp, "is an unknown file format. Use the model ending with .onnx format")
-  if not os.path.exists(fp):
-    raise Exception("[ ERROR ] Path of the onnx model file is Invalid")
-
-def initialize_yolov5(model_path, labels_path, target_dim, target_prob, target_iou):
-    print('Loading labels...\n', end='')
-    checkModelExtension(model_path)
-    with open(labels_path) as f:
-        classes = json.load(f)    
-    print('Loading model...\n', end='')
-    global ort_model
-    ort_model = ONNXRuntimeObjectDetection(model_path, classes, target_dim, target_prob, target_iou)
-    print('Success!')
-
-def predict_yolov5(img_data, pad_list):
-    log_msg('Predicting image')
-
-    t1 = time.time()
-    predictions = ort_model.predict(img_data, pad_list)
-    t2 = time.time()
-    t_infer = (t2-t1)*1000
-    response = {
-        'created': datetime.utcnow().isoformat(),
-        'inference_time': t_infer,
-        'predictions': predictions
-        }
-    return response
-
-def warmup_image(batch_size, warmup_dim):
-    for _ in range(batch_size):
-        yield np.zeros([warmup_dim, warmup_dim, 3], dtype=np.uint8)
-
 
 model_path = "steelball1aml/model.onnx"
 
@@ -336,17 +266,15 @@ output = cv2.VideoWriter('C:\\Users\\babal\\Downloads\\output1.mp4',cv2.VideoWri
 
 batch_size = session.get_inputs()[0].shape
 
-global od_model
-od_model = ONNXRuntimeObjectDetection(model_path, labels)
-  
+# Read until video is completed 
 while(True):
       
     # Capture the video frame
     # by frame
     ret, frame = vid.read()
     start = time.process_time()
-    outputs = model.predict1(frame)
-    print(outputs)
+    #outputs = model.predict1(frame)
+    #print(outputs)
     #outputs = model.predict1(frame)
     #image = PIL.Image.fromarray(frame, 'RGB').resize(640,640)
     #assert batch_size == frame.shape[0]
@@ -355,13 +283,21 @@ while(True):
     # image = Image.fromarray(img)
     #image = PIL.Image.fromarray(img, 'RGB').resize(frame.input_shape)
     #input_array = np.array(image, dtype=np.float32)[np.newaxis, :, :, :]
-    #result = get_predictions_from_ONNX(session, input_array)
-    #print(result)
-    #print(outputs)
-    #result_final = non_max_suppression(
-    #torch.from_numpy(result),
-    #conf_thres=0.1,
-    #iou_thres=0.5)   
+    preprocessimg = preprocess1(frame)
+    #convert_tensor = transforms.ToTensor()
+
+    img = cv2.resize(frame, (640, 640))
+    # convert image to numpy
+    # x = np.asarray(preprocessimg).astype(convert_tensor(img)).reshape(session.get_inputs()[0].shape)
+    #x = tf.convert_to_tensor(img)
+    image = PIL.Image.fromarray(img, 'RGB')
+    x = np.array(img, dtype=np.float32)[np.newaxis, :, :, :]
+    #x = convert_tensor(preprocessimg)
+    #x = x.numpy()
+    x = x / 255
+    result = get_predictions_from_ONNX(session, x)
+    print(result)
+
 
     bounding_boxes_batch = []
     pad_list = []
@@ -370,12 +306,13 @@ while(True):
     #predictions = od_model.predict_image(frame, pad_list=pad_list)
     #print(predictions)
 
-    for result_i, pad in zip(outputs, pad_list):
-        label, image_shape = _convert_to_rcnn_output(result_i, height_onnx, width_onnx, pad)
-        bounding_boxes_batch.append(_get_prediction(label, image_shape, labels))
-    print(json.dumps(bounding_boxes_batch, indent=1))
+    #for result_i, pad in zip(result, pad_list):
+        #label, image_shape = _convert_to_rcnn_output(result_i, height_onnx, width_onnx, pad)
+        #bounding_boxes_batch.append(_get_prediction(label, image_shape, labels))
+    #    print(result_i)
+    #print(json.dumps(bounding_boxes_batch, indent=1))
 
-    image_boxes = bounding_boxes_batch[1]
+    #image_boxes = bounding_boxes_batch[1]
 
     print(" Time taken = " + str(time.process_time() - start))
 
