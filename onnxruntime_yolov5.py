@@ -129,7 +129,7 @@ def predict_yolov5(img_data, pad_list):
     t1 = time.time()
     predictions = ort_model.predict(img_data, pad_list)
     t2 = time.time()
-    t_infer = (t2-t1)*1000
+    t_infer = (t2-t1)
     response = {
         'created': datetime.utcnow().isoformat(),
         'inference_time': t_infer,
