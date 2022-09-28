@@ -115,8 +115,8 @@ movingup = 0
 movingdown = 0
 distance = 0
 
-vid = cv2.VideoCapture('C:\\Users\\babal\\Downloads\\WIN_20220920_11_27_37_Pro.mp4')
-# vid = cv2.VideoCapture(0)
+#vid = cv2.VideoCapture('C:\\Users\\babal\\Downloads\\WIN_20220920_11_27_37_Pro.mp4')
+vid = cv2.VideoCapture(0)
 vid.set(cv2.CAP_PROP_FPS,90)
 #ret = vid.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
 #ret = vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
@@ -233,13 +233,15 @@ while(True):
 
     # Display the resulting frame
     # cv2.imshow('frame', frame)
-    # imS = cv2.resize(frame, (960, 540))                # Resize image
-    # cv2.imshow("output", imS)
-    previousframe = frame
-    prevx = x
-    prevy = y
-    prevw = w
-    prevh = h
+    imS = cv2.resize(frame, (960, 540))                # Resize image
+    cv2.imshow("output", imS)
+    if previousframe is not None:
+        previousframe = frame
+        prevx = x
+        prevy = y
+        prevw = w
+        prevh = h
+    
     # the 'q' button is set as the
     # quitting button you may use any
     # desired button of your choice
