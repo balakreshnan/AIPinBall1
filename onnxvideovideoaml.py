@@ -34,8 +34,8 @@ print(" Onnx Runtime : " + onnxruntime.get_device())
 # labels = ['ballfail','ballinendzone','ballinplunge','flaphit','SteelBall','zone1','zone2']
 #labels = ['BallinPlunger','EndZone','FailZone','GameOver','leftflap','RightFlap','SteelBall']
 
-labels_file = "steelball1aml/labels.json"
-onnx_model_path = "steelball1aml/model.onnx"
+labels_file = "steelball2aml/labels.json"
+onnx_model_path = "steelball2aml/model.onnx"
 
 providers = [
     ('CUDAExecutionProvider', {
