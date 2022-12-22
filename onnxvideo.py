@@ -81,6 +81,8 @@ class Model:
 model_path = "steelball3/model.onnx"
 
 model = Model(model_path)
+color = np.random.randint(0, 255, (100, 3))
+thickness = 2
 
 def main():
     print("Hello World!")
@@ -102,22 +104,32 @@ while(True):
     for box, class_id, score in zip(outputs['detected_boxes'][0], outputs['detected_classes'][0], outputs['detected_scores'][0]):
 	    if score > PROB_THRESHOLD:
 	        if (class_id >= 0 and class_id <= 6):
-                    print(f"Az Cog Label: {labels[class_id]}, Probability: {score:.5f}, box: ({box[0]:.5f}, {box[1]:.5f}) ({box[2]:.5f}, {box[3]:.5f})")
+                    #print(f"Az Cog Label: {labels[class_id]}, Probability: {score:.5f}, box: ({box[0]:.5f}, {box[1]:.5f}) ({box[2]:.5f}, {box[3]:.5f})")
                     x = np.int32(box[0] * frame.shape[1])
                     y = np.int32(box[1] * frame.shape[0])
                     w = np.int32(box[2] * frame.shape[1])
                     h = np.int32(box[3] * frame.shape[0])
+                    print(f"Az Cog Label: {labels[class_id]}, Probability: {score:.5f}, box: ({x:.5f}, {y:.5f}) ({w:.5f}, {h:.5f})")
                     point_one = (x,y)
-                    point_two = (x + w, y + h)
-	                # img1 = cv2.rectangle(jetson.utils.cudaToNumpy(img), point_one, point_two, color=(255,211,67), thickness=2)
-                    cv2.rectangle(frame, point_one, point_two, color=(255,211,67), thickness=2)
+                    #point_two = (x + w, y + h)
+                    point_two = (w, h)
+                    # img1 = cv2.rectangle(jetson.utils.cudaToNumpy(img), point_one, point_two, color=(255,211,67), thickness=2)
+                    #cv2.rectangle(frame, point_one, point_two, color=(255,211,67), thickness=2)
 	            #jetson.utils.cudaDrawRect(img, (x, y, w, h), (255,127,0,200))
 	            # print(x, y, w, h)
 	            # print(f"box: ({box[0]:.5f}, {box[1]:.5f}) ({box[2]:.5f}, {box[3pip ]:.5f})")
+                    image_text = f"{score}%"
+                    color = (0, 255, 0)
+                    thickness = 1
+                    frame = cv2.rectangle(frame, point_one, point_two, color, thickness)
+	            #cv2.imshow('frame', frame)
+                    cv2.putText(frame,labels[class_id] + '-' + image_text,(x-10,y-10),cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),1,cv2.LINE_AA)
+                    #imS = cv2.resize(annotated_frame, (960, 540))
+    cv2.imshow('frame', frame)
     print(" Time taken = " + str(time.process_time() - start))
   
     # Display the resulting frame
-    cv2.imshow('frame', frame)
+    
       
     # the 'q' button is set as the
     # quitting button you may use any
