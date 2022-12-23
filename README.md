@@ -6,6 +6,9 @@
 - This is will torch 1.12 which works and also enables GPU
 - pip install json_tricks
 - pip install objdict
+- sudo pip install jetson-stats
+- pip install openai
+- pip install gym
 
 ## For AML Trained Model
 
