@@ -1,6 +1,6 @@
 import numpy as np
-#import gym
-#from gym import spaces
+import gym
+from gym import spaces
 import logging
 import numpy as np
 import random
@@ -60,7 +60,7 @@ def main():
                     curr_value = GPIO.LOW
                     print("Outputting {} to pin {}".format(curr_value, output_pin))
                     GPIO.output(output_pin, curr_value)
-                    curr_value ^= GPIO.HIGH
+                    #curr_value ^= GPIO.HIGH
             # Toggle the output every second
             #print("Outputting {} to pin {}".format(curr_value, output_pin))
             #GPIO.output(output_pin, curr_value)
