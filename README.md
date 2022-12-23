@@ -41,3 +41,9 @@ pip3 install -U numpy grpcio absl-py py-cpuinfo psutil portpicker six mock reque
 ```
 pip3 install --extra-index-url https://developer.download.nvidia.com/compute/redist/jp/v50 tensorflow==2.10.0+nv22.11
 ```
+
+- Deactive
+
+```
+deactivate
+```
