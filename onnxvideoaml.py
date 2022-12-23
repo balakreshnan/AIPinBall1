@@ -321,6 +321,7 @@ while(True):
     print(json.dumps(' Prediction output: '+ str(predictions), indent=1))
 
     #print(predictions)
+    frame = cv2.resize(frame, (960, 540))
 
     detection_count = len(predictions)
     #print(f"Detection Count: {detection_count}")
@@ -329,22 +330,23 @@ while(True):
         for i in range(detection_count):
             bounding_box = predictions[i]['bbox']
             tag_name = predictions[i]['labelName']
-            probability = round(predictions[i]['probability'],2)
-            image_text = f"{probability}%"
-            color = (0, 255, 0)
-            thickness = 1
-            xmin = int(bounding_box["left"])
-            xmax = int(bounding_box["width"])
-            ymin = int(bounding_box["top"])
-            ymax = int(bounding_box["height"])
-            start_point = (int(bounding_box["left"]), int(bounding_box["top"]))
-            end_point = (int(bounding_box["width"]), int(bounding_box["height"]))
-            annotated_frame = cv2.rectangle(annotated_frame, start_point, end_point, color, thickness)
-            cv2.putText(annotated_frame,tag_name + '-' + image_text,(xmin-10,ymin-10),cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),1,cv2.LINE_AA)
-            imS = cv2.resize(annotated_frame, (960, 540))
-            cv2.imshow('frame', imS)
+            if tag_name != 'EndZone':
+                probability = round(predictions[i]['probability'],2)
+                image_text = f"{probability}%"
+                color = (0, 255, 0)
+                thickness = 1
+                xmin = int(bounding_box["left"])
+                xmax = int(bounding_box["width"])
+                ymin = int(bounding_box["top"])
+                ymax = int(bounding_box["height"])
+                start_point = (int(bounding_box["left"]), int(bounding_box["top"]))
+                end_point = (int(bounding_box["width"]), int(bounding_box["height"]))
+                annotated_frame = cv2.rectangle(annotated_frame, start_point, end_point, color, thickness)
+                cv2.putText(annotated_frame,tag_name + '-' + image_text,(xmin-10,ymin-10),cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),1,cv2.LINE_AA)
+                frame = cv2.resize(annotated_frame, (960, 540))
+                #cv2.imshow('frame', frame)
 
-
+    cv2.imshow('Processed Frame', frame)
     print(" Time taken = " + str(time.process_time() - start))
 
     # imS = cv2.resize(img, (960, 540))
