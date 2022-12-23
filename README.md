@@ -9,6 +9,9 @@
 - sudo pip install jetson-stats
 - pip install openai
 - pip install gym
+- sudo pip install Jetson.GPIO
+- pip install Jetson.GPIO
+- pip install matplotlib
 
 ## For AML Trained Model
 
