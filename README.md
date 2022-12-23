@@ -16,3 +16,25 @@
 
 - python onnxvideo.py
 - Make sure the video capture is set to appropriate device id for our test it was 0
+
+## Refinforcement learning need tensorflow environment
+
+```
+python3 -m virtualenv -p python tfenv
+```
+
+```
+source tfenv/bin/activate
+```
+
+- install dependencies inside env
+
+```
+pip3 install -U numpy grpcio absl-py py-cpuinfo psutil portpicker six mock requests gast h5py astor termcolor protobuf keras-applications keras-preprocessing wrapt google-pasta setuptools testresources
+```
+
+- #sudo pip3 install --extra-index-url https://developer.download.nvidia.com/compute/redist/jp/v502 tensorflow==2.10.0+nv22.11
+
+```
+pip3 install --extra-index-url https://developer.download.nvidia.com/compute/redist/jp/v50 tensorflow==2.10.0+nv22.11
+```
