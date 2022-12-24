@@ -47,4 +47,5 @@ interpreter = tf.lite.Interpreter(os.path.join(output_dir, 'policy.tflite'))
 policy_runner = interpreter.get_signature_runner()
 print(policy_runner._inputs)
 
-
+if __name__ == "__main__":
+   main()
