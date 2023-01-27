@@ -197,174 +197,179 @@ def main():
     #file_path = 'pinballframe8890.jpg'
     #img = Image.open('pinballframe8890.jpg')
     # define a video capture object
-vid = cv2.VideoCapture(0)
+    vid = cv2.VideoCapture(0)
 
-previousframe = None
-prevx = 0
-prevy = 0
-prevw = 0
-prevh = 0
-movingleft = 0
-movingright = 0
-movingup = 0
-movingdown = 0
-distance = 0
+    previousframe = None
+    prevx = 0
+    prevy = 0
+    prevw = 0
+    prevh = 0
+    movingleft = 0
+    movingright = 0
+    movingup = 0
+    movingdown = 0
+    distance = 0
 
-#vid = cv2.VideoCapture('C:\\Users\\babal\\Downloads\\WIN_20220920_11_27_37_Pro.mp4')
-# vid.set(cv2.CAP_PROP_FPS,90)
-#ret = vid.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-#ret = vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+    #vid = cv2.VideoCapture('C:\\Users\\babal\\Downloads\\WIN_20220920_11_27_37_Pro.mp4')
+    # vid.set(cv2.CAP_PROP_FPS,90)
+    #ret = vid.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+    #ret = vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
-print('FPS ',vid.get(cv2.CAP_PROP_FPS))
-print('Width ',vid.get(cv2.CAP_PROP_FRAME_WIDTH))
-print('Height ',vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
-print('Fourcc' ,vid.get(cv2.CAP_PROP_FOURCC))
-print('Hue' ,vid.get(cv2.CAP_PROP_HUE))
-print('RGB' ,vid.get(cv2.CAP_PROP_CONVERT_RGB))
+    print('FPS ',vid.get(cv2.CAP_PROP_FPS))
+    print('Width ',vid.get(cv2.CAP_PROP_FRAME_WIDTH))
+    print('Height ',vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    print('Fourcc' ,vid.get(cv2.CAP_PROP_FOURCC))
+    print('Hue' ,vid.get(cv2.CAP_PROP_HUE))
+    print('RGB' ,vid.get(cv2.CAP_PROP_CONVERT_RGB))
 
-# Create some random colors
-color = np.random.randint(0, 255, (100, 3))
+    # Create some random colors
+    color = np.random.randint(0, 255, (100, 3))
 
-# Take first frame and find corners in it
-ret, frame = vid.read()
-#old_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-#p0 = cv2.goodFeaturesToTrack(old_gray, mask = None, **feature_params)
-
-# Create a mask image for drawing purposes
-mask = np.zeros_like(frame)
-
-session = onnxruntime.InferenceSession(onnx_model_path, providers=providers)
-
-sess_input = session.get_inputs()
-sess_output = session.get_outputs()
-print(f"No. of inputs : {len(sess_input)}, No. of outputs : {len(sess_output)}")
-
-for idx, input_ in enumerate(range(len(sess_input))):
-    input_name = sess_input[input_].name
-    input_shape = sess_input[input_].shape
-    input_type = sess_input[input_].type
-    print(f"{idx} Input name : { input_name }, Input shape : {input_shape}, \
-    Input type  : {input_type}")  
-
-for idx, output in enumerate(range(len(sess_output))):
-    output_name = sess_output[output].name
-    output_shape = sess_output[output].shape
-    output_type = sess_output[output].type
-    print(f" {idx} Output name : {output_name}, Output shape : {output_shape}, \
-    Output type  : {output_type}")
-
-batch, channel, height_onnx, width_onnx = session.get_inputs()[0].shape
-#batch, channel, height_onnx, width_onnx
-
-print(session.get_inputs()[0].shape)
-
-from onnxruntime_yolov5 import initialize_yolov5
-labelPath = f'steelball1aml/labels.json'
-labelFile = 'labels.json'
-initialize_yolov5(onnx_model_path, labelPath, 640,0.4,0.5) 
-
-frame_size = (960, 540)
-# Initialize video writer object
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-# fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
-# fourcc = cv2.VideoWriter_fourcc(*'XVID')
-# fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-# output = cv2.VideoWriter('C:\\Users\\babal\\Downloads\\output_video_from_file.mp4', fourcc, 60, frame_size, 1)
-output = cv2.VideoWriter('C:\\Users\\babal\\Downloads\\output1.mp4',cv2.VideoWriter_fourcc(*'mp4v'), 20, frame_size)
-
-batch_size = session.get_inputs()[0].shape
-print(labels)
-
-# Read until video is completed 
-while(True):
-      
-    # Capture the video frame
-    # by frame
+    # Take first frame and find corners in it
     ret, frame = vid.read()
-    start = time.process_time()
-    #outputs = model.predict1(frame)
-    #print(outputs)
-    #outputs = model.predict1(frame)
-    #image = PIL.Image.fromarray(frame, 'RGB').resize(640,640)
-    #assert batch_size == frame.shape[0]
-    #print(session.get_inputs()[0].shape[2:])
-    #img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    # image = Image.fromarray(img)
-    #image = PIL.Image.fromarray(img, 'RGB').resize(frame.input_shape)
-    #input_array = np.array(image, dtype=np.float32)[np.newaxis, :, :, :]
-    preprocessimg = preprocess1(frame)
-    #convert_tensor = transforms.ToTensor()
+    #old_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    #p0 = cv2.goodFeaturesToTrack(old_gray, mask = None, **feature_params)
 
-    img = cv2.resize(frame, (640, 640))
-    # convert image to numpy
-    # print(session.get_inputs()[0].shape)
-    x = np.array(img).astype('float32').reshape([1, channel, height_onnx, width_onnx])
-    x = x / 255
+    # Create a mask image for drawing purposes
+    mask = np.zeros_like(frame)
 
-    # y = preprocessimg.tolist()
-    # result = get_predictions_from_ONNX(session, preprocessimg)
+    session = onnxruntime.InferenceSession(onnx_model_path, providers=providers)
 
-    #preprocessimg = frame_resize(frame)
+    sess_input = session.get_inputs()
+    sess_output = session.get_outputs()
+    print(f"No. of inputs : {len(sess_input)}, No. of outputs : {len(sess_output)}")
 
-    #result = get_predictions_from_ONNX(session, x)
-    #print(result)
-    h, w = frame.shape[:2]
+    for idx, input_ in enumerate(range(len(sess_input))):
+        input_name = sess_input[input_].name
+        input_shape = sess_input[input_].shape
+        input_type = sess_input[input_].type
+        print(f"{idx} Input name : { input_name }, Input shape : {input_shape}, \
+        Input type  : {input_type}")  
 
-    frame_optimized, ratio, pad_list = frame_resize(frame, 640)
-    from onnxruntime_yolov5 import predict_yolov5
-    result = predict_yolov5(frame_optimized, pad_list)
-    predictions = result['predictions'][0]
-    new_w = int(ratio[0]*w)
-    new_h = int(ratio[1]*h)
-    frame_resized = cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_AREA)
-    annotated_frame = frame_resized.copy()
-    print(json.dumps(' Prediction output: '+ str(predictions), indent=1))
+    for idx, output in enumerate(range(len(sess_output))):
+        output_name = sess_output[output].name
+        output_shape = sess_output[output].shape
+        output_type = sess_output[output].type
+        print(f" {idx} Output name : {output_name}, Output shape : {output_shape}, \
+        Output type  : {output_type}")
 
-    #print(predictions)
-    frame = cv2.resize(frame, (960, 540))
+    batch, channel, height_onnx, width_onnx = session.get_inputs()[0].shape
+    #batch, channel, height_onnx, width_onnx
 
-    detection_count = len(predictions)
-    #print(f"Detection Count: {detection_count}")
+    print(session.get_inputs()[0].shape)
 
-    if detection_count > 0:
-        for i in range(detection_count):
-            bounding_box = predictions[i]['bbox']
-            tag_name = predictions[i]['labelName']
-            if tag_name != 'EndZone':
-                probability = round(predictions[i]['probability'],2)
-                image_text = f"{probability}%"
-                color = (0, 255, 0)
-                thickness = 1
-                xmin = int(bounding_box["left"])
-                xmax = int(bounding_box["width"])
-                ymin = int(bounding_box["top"])
-                ymax = int(bounding_box["height"])
-                start_point = (int(bounding_box["left"]), int(bounding_box["top"]))
-                end_point = (int(bounding_box["width"]), int(bounding_box["height"]))
-                annotated_frame = cv2.rectangle(annotated_frame, start_point, end_point, color, thickness)
-                cv2.putText(annotated_frame,tag_name + '-' + image_text,(xmin-10,ymin-10),cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),1,cv2.LINE_AA)
-                frame = cv2.resize(annotated_frame, (960, 540))
+    from onnxruntime_yolov5 import initialize_yolov5
+    labelPath = f'steelball2aml/labels.json'
+    labelFile = 'labels.json'
+    initialize_yolov5(onnx_model_path, labelPath, 640,0.4,0.5) 
+
+    frame_size = (960, 540)
+    # Initialize video writer object
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    # fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
+    # fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    # fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
+    # output = cv2.VideoWriter('C:\\Users\\babal\\Downloads\\output_video_from_file.mp4', fourcc, 60, frame_size, 1)
+    #output = cv2.VideoWriter('C:\\Users\\babal\\Downloads\\output1.mp4',cv2.VideoWriter_fourcc(*'mp4v'), 20, frame_size)
+
+    batch_size = session.get_inputs()[0].shape
+    print(labels)
+
+    # Read until video is completed 
+    while(True):
+        
+        # Capture the video frame
+        # by frame
+        ret, frame = vid.read()
+        start = time.process_time()
+        #outputs = model.predict1(frame)
+        #print(outputs)
+        #outputs = model.predict1(frame)
+        #image = PIL.Image.fromarray(frame, 'RGB').resize(640,640)
+        #assert batch_size == frame.shape[0]
+        #print(session.get_inputs()[0].shape[2:])
+        #img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # image = Image.fromarray(img)
+        #image = PIL.Image.fromarray(img, 'RGB').resize(frame.input_shape)
+        #input_array = np.array(image, dtype=np.float32)[np.newaxis, :, :, :]
+        preprocessimg = preprocess1(frame)
+        #convert_tensor = transforms.ToTensor()
+        #img1 = frame
+
+        img = cv2.resize(frame, (640, 640))
+        # convert image to numpy
+        # print(session.get_inputs()[0].shape)
+        x = np.array(img).astype('float32').reshape([1, channel, height_onnx, width_onnx])
+        x = x / 255
+
+        # y = preprocessimg.tolist()
+        # result = get_predictions_from_ONNX(session, preprocessimg)
+
+        #preprocessimg = frame_resize(frame)
+
+        #result = get_predictions_from_ONNX(session, x)
+        #print(result)
+        h, w = frame.shape[:2]
+
+        frame_optimized, ratio, pad_list = frame_resize(frame, 640)
+        from onnxruntime_yolov5 import predict_yolov5
+        result = predict_yolov5(frame_optimized, pad_list)
+        predictions = result['predictions'][0]
+        new_w = int(ratio[0]*w)
+        new_h = int(ratio[1]*h)
+        frame_resized = cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_AREA)
+        annotated_frame = frame_resized.copy()
+        print(json.dumps(' Prediction output: '+ str(predictions), indent=1))
+
+        #print(predictions)
+        #frame = cv2.resize(frame, (960, 540))
+
+        detection_count = len(predictions)
+        #print(f"Detection Count: {detection_count}")
+
+        if detection_count > 0:
+            for i in range(detection_count):
+                bounding_box = predictions[i]['bbox']
+                tag_name = predictions[i]['labelName']
+                if tag_name != 'EndZone':
+                    probability = round(predictions[i]['probability'],2)
+                    image_text = f"{probability}%"
+                    color = (0, 255, 0)
+                    thickness = 1
+                    xmin = int(bounding_box["left"])
+                    xmax = int(bounding_box["width"])
+                    ymin = int(bounding_box["top"])
+                    ymax = int(bounding_box["height"])
+                    start_point = (int(bounding_box["left"]), int(bounding_box["top"]))
+                    end_point = (int(bounding_box["width"]), int(bounding_box["height"]))
+                    annotated_frame = cv2.rectangle(annotated_frame, start_point, end_point, color, thickness)
+                    cv2.putText(annotated_frame,tag_name + '-' + image_text,(xmin-10,ymin-10),cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),1,cv2.LINE_AA)
+                    #frame = cv2.resize(annotated_frame, (960, 540))
+                    frame = cv2.resize(annotated_frame, (640, 480))
+                    #cv2.imshow('frame', frame)
+                
                 #cv2.imshow('frame', frame)
+        
+        frame = cv2.resize(frame, (640, 480))
+        cv2.imshow('Processed Frame', frame)
+        print(" Time taken = " + str(time.process_time() - start))
 
-    cv2.imshow('Processed Frame', frame)
-    print(" Time taken = " + str(time.process_time() - start))
+        # imS = cv2.resize(img, (960, 540))
 
-    # imS = cv2.resize(img, (960, 540))
+        # Display the resulting frame
+        # cv2.imshow('frame', imS)
 
-    # Display the resulting frame
-    # cv2.imshow('frame', imS)
-
-    # the 'q' button is set as the
-    # quitting button you may use any
-    # desired button of your choice
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-  
-output.release()
-# After the loop release the cap object
-vid.release()
-# Destroy all the windows
-cv2.destroyAllWindows()
+        # the 'q' button is set as the
+        # quitting button you may use any
+        # desired button of your choice
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    
+    output.release()
+    # After the loop release the cap object
+    vid.release()
+    # Destroy all the windows
+    cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":

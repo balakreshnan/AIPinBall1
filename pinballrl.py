@@ -17,6 +17,28 @@ import numpy as np
 #from jtop import jtop
 #import RPi.GPIO as GPIO
 import time
+import win32pipe, win32file
+
+class PipeServer():
+    def __init__(self, pipeName):
+        self.pipe = win32pipe.CreateNamedPipe(
+        r'\\.\pipe\\'+pipeName,
+        win32pipe.PIPE_ACCESS_OUTBOUND,
+        win32pipe.PIPE_TYPE_MESSAGE | win32pipe.PIPE_READMODE_MESSAGE | win32pipe.PIPE_WAIT,
+        1, 65536, 65536,
+        0,
+        None)
+    
+    #Carefull, this blocks until a connection is established
+    def connect(self):
+        win32pipe.ConnectNamedPipe(self.pipe, None)
+    
+    #Message without tailing '\n'
+    def write(self, message):
+        win32file.WriteFile(self.pipe, message.encode()+b'\n')
+
+    def close(self):
+        win32file.CloseHandle(self.pipe)
 
 
 class PinballSimulatorEnv(gym.Env):
@@ -176,6 +198,8 @@ class DQNAgent:
 
 def main():
     agent = DQNAgent(state_size, action_size)
+    t = PipeServer("CSServer")
+    t.connect()
 
     def getcurrentstatus():
         score = random.randrange(50, 100000, 3)
@@ -222,11 +246,13 @@ def main():
             else:
                 curr_value = 'Right flap'
                 #GPIO.output(output_pin, curr_value)
+                t.write(curr_value)
         if len(agent.memory) > batch_size:
             agent.train(batch_size) 
         if e % 50 == 0:
             agent.save(output_dir + "weights_"
                     + "{:04d}".format(e) + ".hdf5")
+    t.close()
 
 if __name__ == "__main__":
    main()
